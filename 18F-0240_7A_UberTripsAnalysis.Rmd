@@ -3,6 +3,7 @@ title: "18F-0240_7A_UberTripsAnalysis"
 author: "18F-0240"
 date: "12/11/2021"
 output: pdf_document
+github link: "https://github.com/HuzaifahZia/Uber-Trips-Analysis"
 ---
 
 ```{r setup, include=FALSE}
@@ -16,25 +17,34 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 # Uber Trips Analysis in R
+-"https://github.com/HuzaifahZia/Uber-Trips-Analysis"
 -Installing Libraries
 ```{r}
 library(data.table)
 library(plotly)
 library(ggplot2)
+library(ggthemes)
 library(lambda.r)
 library(lubridate)
 library(reticulate)
+library(dplyr)
 ```
 
 
-
+-Reading csv file and storing data to data
+-transforming stored dates as characters to datetime type
+-displaying data
 ```{r}
 data <- read.csv("uber-raw-data-sep14.csv")
 data$Date.Time <- mdy_hms(data$Date.Time)
-data
+head(data)
 ```
 
-
+-adding column Day to data dataframe and assigning day extracted from column Date.Time
+-Extracting weekdays from data to ExtractedWeekdays and assigning them numbers(monday 0, tuesday 1, wednesday 2, ...)
+-adding column Weekday to data dataframe and assigning it ExtractedWeekdays
+--adding column Hour to data dataframe and assigning hour extracted from column Date.Time
+-showing first 6 rows of data dataframe
 ```{r}
 data$Day <- format(as.Date(data$Date.Time,format="%Y-%m-%d"), format = "%d")
 ExtractedWeekdays <-weekdays(as.Date(data$Date.Time))
@@ -82,7 +92,23 @@ ggplot(data,aes(x = as.integer(Weekday), color = 'density')) +
 ```
 
 ```{r}
-df = apply(group_by(data$Weekday,data$Hour))
-df
+df<- data %>% group_by(Weekday, Hour) %>% dplyr:: summarise(Total = n())
+
+ggplot(df, aes(Hour, Weekday, fill = Total)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdPu") +
+  coord_trans(y = "reverse") +
+  ggtitle("Heat Map by Hour and Day")
+```
+
+```{r}
+ggplot(data, aes(x=Lon, y=Lat)) +
+  geom_point(size=1, color = "steelblue") +
+  scale_x_continuous(limits=c(min(data$Lon), max(data$Lon))) +
+  scale_y_continuous(limits=c(min(data$Lat), max(data$Lat))) +
+  xlab("Lat")+
+  ylab("Lon")+
+  ggtitle("Uber Trip Analysis")
+
 ```
 
